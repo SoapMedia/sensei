@@ -1884,7 +1884,7 @@ class Sensei_WC {
 	private static function get_courses_from_product_id($item_id)
 	{
 		$product = self::get_product_object($item_id);
-
+		if(is_bool($product)){ return false; }
 		$product_courses = Sensei()->course->get_product_courses($product->get_id());
 		return $product_courses;
 	}
