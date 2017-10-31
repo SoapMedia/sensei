@@ -77,6 +77,8 @@ class WooThemes_Sensei_Email_Learner_Graded_Quiz {
 			$this->heading = apply_filters( 'sensei_email_heading', __( 'You have completed a quiz', 'woothemes-sensei' ), $this->template );
 		}
 
+        $lesson_feedback = Sensei()->quiz->get_user_assessment_feedback( $lesson_id, $user_id );
+
 		// Construct data array
 		$sensei_email_data = apply_filters( 'sensei_email_data', array(
 			'template'			=> $this->template,
@@ -89,6 +91,7 @@ class WooThemes_Sensei_Email_Learner_Graded_Quiz {
 			'passmark'			=> $passmark,
 			'passed'			=> $passed,
 			'grade_type'		=> $grade_type,
+            'lesson_feedback'   => $lesson_feedback,
 		), $this->template );
 
 		// Send mail

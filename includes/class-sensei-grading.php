@@ -586,6 +586,8 @@ class Sensei_Grading {
 
         //store the feedback from grading
         Sensei()->quiz->save_user_answers_feedback( $all_answers_feedback, $quiz_lesson_id , $user_id );
+        $assessment_feedback = $_POST['assessment_feedback'];
+        Sensei()->quiz->save_user_assessment_feedback( $assessment_feedback, $quiz_lesson_id , $user_id );
 
         // $_POST['all_questions_graded'] is set when all questions have been graded
         // in the class sensei grading user quiz -> display()

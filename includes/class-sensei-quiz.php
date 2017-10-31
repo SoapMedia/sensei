@@ -981,6 +981,116 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
      } // end get_user_answers_feedback
 
      /**
+      * Save the user's assessment feedback
+      *
+      * For this function you must supply all three parameters. If will return false one is left out.
+      * The data will be saved on the lesson ID supplied.
+      *
+      * @since 1.7.5
+      * @access public
+      *
+      * @param string $assessment_feedback
+      * @param int $lesson_id
+      * @param int $user_id
+      *
+      * @return false or int $feedback_saved
+      */
+     public function save_user_assessment_feedback( $assessment_feedback, $lesson_id , $user_id = 0 ){
+
+         // make sure the parameters are valid before continuing
+         if( empty( $lesson_id ) || empty( $user_id )
+             || 'lesson' != get_post_type( $lesson_id )
+             ||!get_userdata( $user_id )
+             || !isset( $assessment_feedback ) ){
+
+             return false;
+
+         }
+
+
+         // check if the lesson is started before saving, if not start the lesson for the user
+         if ( !( 0 < intval( Sensei_Utils::user_started_lesson( $lesson_id, $user_id) ) ) ) {
+             Sensei_Utils::sensei_start_lesson( $lesson_id, $user_id );
+         }
+
+         // encode the feedback
+         $encoded_assessment_feedback = base64_encode( $assessment_feedback );
+
+
+         // save the user data
+         $feedback_saved = Sensei_Utils::add_user_data( 'quiz_assessment_feedback', $lesson_id , $encoded_assessment_feedback, $user_id ) ;
+
+         //Were the the question feedback save correctly?
+         if( intval( $feedback_saved ) > 0){
+
+             // save transient to make retrieval faster in future
+             $transient_key = 'sensei_assessment_feedback_'.$user_id.'_'.$lesson_id;
+             set_transient( $transient_key, $encoded_assessment_feedback, 10 * DAY_IN_SECONDS );
+
+         }
+
+         return $feedback_saved;
+
+     } // end save_user_assessment_feedback
+
+     /**
+      * Get the user's answers feedback.
+      *
+      * This function returns the feedback submitted by the teacher/admin
+      * during grading. Grading occurs manually or automatically.
+      *
+      * @since 1.7.5
+      * @access public
+      *
+      * @param int $lesson_id
+      * @param int $user_id
+      *
+      * @return false | array $answers_feedback{
+      *  $type int $question_id
+      *  $type string $question_feedback
+      * }
+      */
+     public function get_user_assessment_feedback( $lesson_id , $user_id = 0 ){
+
+         $assessment_feedback = "";
+
+         // get the user_id if none was passed in use the current logged in user
+         if( ! intval( $user_id ) > 0 ) {
+             $user_id = get_current_user_id();
+         }
+
+         if ( ! intval( $lesson_id ) > 0 || 'lesson' != get_post_type( $lesson_id )
+             || ! intval( $user_id )  > 0 || !get_userdata( $user_id )  ) {
+             return false;
+         }
+
+         // first check the transient to save a few split seconds
+         $transient_key = 'sensei_assessment_feedback_'.$user_id.'_'.$lesson_id;
+         $encoded_feedback = get_transient( $transient_key );
+
+         // get the data if nothing was stored in the transient
+         if( empty( $encoded_feedback  ) || !$encoded_feedback ){
+
+             $encoded_feedback = Sensei_Utils::get_user_data( 'quiz_assessment_feedback', $lesson_id, $user_id );
+
+             //set the transient with the new valid data for faster retrieval in future
+             set_transient( $transient_key,  $encoded_feedback, 10 * DAY_IN_SECONDS);
+
+         } // end if transient check
+
+         // if there is no data for this user
+         if( ! isset( $encoded_feedback ) ){
+             return false;
+         }
+
+         $assessment_feedback = base64_decode( $encoded_feedback );
+
+
+         return $assessment_feedback;
+
+     } // end get_user_assessment_feedback
+
+     /**
       * Get the user's answer feedback for a specific question.
       *
       * This function gives you a single answer note/feedback string
