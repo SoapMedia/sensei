@@ -2395,7 +2395,7 @@ class Sensei_Utils {
     public static function course_videos_count( $course_id ) {
 
         global $wpdb;
-
+        //TODO: Store the following query in a transient as its mega slow
         $query = <<<EOF
 SELECT count( * )
 FROM {$wpdb->prefix}postmeta
