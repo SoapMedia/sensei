@@ -74,7 +74,7 @@ class Sensei_Grading_User_Quiz {
 		$lesson_status_id = Sensei_Utils::sensei_get_activity_value( array( 'post_id' => $this->lesson_id, 'user_id' => $this->user_id, 'type' => 'sensei_lesson_status', 'field' => 'comment_ID' ) );
 		$user_quiz_grade = get_comment_meta( $lesson_status_id, 'grade', true );
 		$correct_answers = 0;
-        $assessment_notes = Sensei()->quiz->get_user_assessment_feedback( $lesson_id, $user_id );
+		$assessment_notes = Sensei()->quiz->get_user_assessment_feedback( $lesson_id, $user_id );
 
 		foreach( $questions as $question ) {
 			$question_id = $question->ID;
@@ -252,19 +252,16 @@ class Sensei_Grading_User_Quiz {
 				<span><?php esc_attr_e( __( 'Grade:', 'woothemes-sensei' ) ); ?></span>
 				<span class="total_grade_total"><?php echo $user_quiz_grade_total; ?></span> / <span class="quiz_grade_total"><?php echo $quiz_grade_total; ?></span> (<span class="total_grade_percent"><?php echo $quiz_grade; ?></span>%)
 			</div>
-
-            <div class="postbox question_box">
-                <div class="handlediv" title="Click to toggle"><br></div>
-                <h3 class="hndle"><span><?php _e( 'Assessment Notes', 'woothemes-sensei' ) ?></span></h3>
-                <div class="inside">
-                    <div class="answer-notes">
-                        <textarea class="correct-answer" style="width:100%;" id="assessment_feedback" name="assessment_feedback" placeholder="<?php _e( 'Add notes here...', 'woothemes-sensei' ) ?>"><?php echo $assessment_notes; ?></textarea>
-                    </div>
-                </div>
-            </div>
-
-
-        <div class="buttons">
+			<div class="postbox question_box">
+				<div class="handlediv" title="Click to toggle"><br></div>
+				<h3 class="hndle"><span><?php _e( 'Assessment Notes', 'woothemes-sensei' ) ?></span></h3>
+				<div class="inside">
+					<div class="answer-notes">
+						<textarea class="correct-answer" style="width:100%;" id="assessment_feedback" name="assessment_feedback" placeholder="<?php _e( 'Add notes here...', 'woothemes-sensei' ) ?>"><?php echo $assessment_notes; ?></textarea>
+					</div>
+				</div>
+			</div>
+			<div class="buttons">
 				<input type="submit" value="<?php esc_attr_e( 'Save' ); ?>" class="grade-button button-primary" title="Saves grades as currently marked on this page" />
 				<input type="button" value="<?php esc_attr_e( __( 'Auto grade', 'woothemes-sensei' ) ); ?>" class="autograde-button button-secondary" title="Where possible, automatically grades questions that have not yet been graded" />
 				<input type="reset" value="<?php esc_attr_e( __( 'Reset', 'woothemes-sensei' ) ); ?>" class="reset-button button-secondary" title="Resets all questions to ungraded and total grade to 0" />
