@@ -642,8 +642,8 @@ class Sensei_Question {
 
 		// Show answers if allowed
 		if( $show_answers ) {
-            $answer_notes = Sensei()->quiz->get_user_question_feedback( $lesson_id, $question_id, get_current_user_id() );
-
+            //$answer_notes = Sensei()->quiz->get_user_question_feedback( $lesson_id, $question_id, get_current_user_id() );
+            $answer_notes = Sensei()->quiz->get_user_assessment_feedback($lesson_id, get_current_user_id());
             if( $answer_notes ) { ?>
 
                 <div class="sensei-message info info-special answer-feedback">
