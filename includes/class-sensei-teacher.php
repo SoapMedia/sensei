@@ -751,11 +751,12 @@ class Sensei_Teacher {
 
         //setup the lessons quizzes  to limit the grading totals to
         $quiz_scope = array();
+		$lesson_cache = Sensei()->course->populate_lesson_post_ids_cache(); // Warm the lesson cache
         foreach( $courses as $course ){
 
-            $course_lessons = Sensei()->course->course_lessons( $course->ID );
+            $course_lessons = Sensei()->course->course_lessons( $course->ID ,$post_status = 'publish', $fields = 'all', $lesson_cache );
 
-            if( ! empty( $course_lessons ) && is_array( $course_lessons  ) ){
+            if( ! empty( $course_lessons ) && is_array( $course_lessons ) ){
 
                 foreach(  $course_lessons as $lesson ){
 
