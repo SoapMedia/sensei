@@ -27,6 +27,14 @@ class Sensei_Course {
      * my courses page, false if none was set
      */
     public  $my_courses_page;
+	
+	/**
+     * @var array $lesson_post_ids_cache
+     * Cache for getting post ids for lessons
+     * key is the lesson ID
+     * value is an array of post IDs
+     */
+    protected $lesson_post_ids_cache;
 
 	/**
 	 * @var array The HTML allowed for message boxes.
@@ -924,35 +932,56 @@ class Sensei_Course {
 	} // End course_count()
 
 
-	/**
-	 * course_lessons function.
-	 *
-	 * @access public
-	 * @param int $course_id (default: 0)
-	 * @param string $post_status (default: 'publish')
-	 * @param string $fields (default: 'all'). WP only allows 3 types, but we will limit it to only 'ids' or 'all'
-	 * @return array{ type WP_Post }  $posts_array
-	 */
-	public function course_lessons( $course_id = 0, $post_status = 'publish', $fields = 'all' ) {
+	/* populate_lesson_post_ids_cache.
+         *
+         * @access public
+         * @return array{ object } $lesson_post_ids_cache
+    */
+    public function populate_lesson_post_ids_cache(){
+        global $wpdb;
+        $post_obj = $wpdb->get_results( 'SELECT post_id, meta_value FROM wp_postmeta WHERE meta_key = \'_lesson_course\' ;', OBJECT );
+        foreach($post_obj as $post_obj_ent){
+            if(!array_key_exists($post_obj_ent->meta_value,$lesson_post_ids_cache)){
+                $lesson_post_ids_cache[$post_obj_ent->meta_value] = array();
+            }
+            $lesson_post_ids_cache[$post_obj_ent->meta_value][] = $post_obj_ent->post_id;
+        }
+        return $lesson_post_ids_cache;
+    }
+    
+    /**
+     * course_lessons function.
+     *
+     * @access public
+     * @param int $course_id (default: 0)
+     * @param string $post_status (default: 'publish')
+     * @param string $fields (default: 'all'). WP only allows 3 types, but we will limit it to only 'ids' or 'all'
+     * @return array{ type WP_Post }  $posts_array
+     */
+    public function course_lessons( $course_id = 0, $post_status = 'publish', $fields = 'all', $lesson_post_ids_cache = null ) {
 
         if( is_a( $course_id, 'WP_Post' ) ){
             $course_id = $course_id->ID;
         }
-
-		$post_args = array(	'post_type'         => 'lesson',
-							'posts_per_page'       => -1,
-							'orderby'           => 'date',
-							'order'             => 'ASC',
-							'meta_query'        => array(
-								array(
-									'key' => '_lesson_course',
-									'value' => intval( $course_id ),
-								),
-							),
-							'post_status'       => $post_status,
-							'suppress_filters'  => 0,
-							);
-		$query_results = new WP_Query( $post_args );
+        $post_ids = array();
+        if(!is_array($lesson_post_ids_cache) || count($lesson_post_ids_cache) <= 0){
+            global $wpdb;
+            $post_obj = $wpdb->get_results( 'SELECT post_id FROM wp_postmeta WHERE meta_key = \'_lesson_course\' AND meta_value = ' . intval( $course_id ) . ';', OBJECT );
+            foreach($post_obj as $post_obj_ent){
+                $post_ids[] = $post_obj_ent->post_id;
+            }
+        }else{
+            $post_ids = $lesson_post_ids_cache[intval( $course_id )];
+        }
+        $post_args = array(	'post_type'         => 'lesson',
+            'posts_per_page'       => -1,
+            'orderby'           => 'date',
+            'order'             => 'ASC',
+            'post_status'       => $post_status,
+            'suppress_filters'  => 0,
+            'post__in' => $post_ids
+        );
+        $query_results = new WP_Query( $post_args );
         $lessons = $query_results->posts;
 
         // re order the lessons. This could not be done via the OR meta query as there may be lessons
@@ -995,7 +1024,7 @@ class Sensei_Course {
 
         return $lessons;
 
-	} // End course_lessons()
+    } // End course_lessons()
 
     /**
      * Used for the uasort in $this->course_lessons()
