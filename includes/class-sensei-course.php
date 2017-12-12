@@ -988,13 +988,28 @@ class Sensei_Course {
         // with the course order for a different course and this should not be included. It could also not
         // be done via the AND meta query as it excludes lesson that does not have the _order_$course_id but
         // that have been added to the course.
+        global $wpdb;
+        $lesson_query = 'SELECT post_id, meta_value FROM wp_postmeta WHERE post_id IN (' . implode(',',$post_ids) .') AND meta_key REGEXP \'(_order_)([0-9]+)\';';
+        $_lesson_sorting = $wpdb->get_results( $lesson_query, OBJECT );
+        $_lesson_orders = array();
+        foreach($_lesson_sorting as $_sort_result){
+            $_lesson_orders[$_sort_result->post_id] = $_sort_result->meta_value;
+        }
+
+
+
         if( count( $lessons) > 1  ){
 
             foreach( $lessons as $lesson ){
 
-                $order = intval( get_post_meta( $lesson->ID, '_order_'. $course_id, true ) );
+                //$order = intval( get_post_meta( $lesson->ID, '_order_'. $course_id, true ) );
+                if(array_key_exists($lesson->ID,$_lesson_orders)){
+                    $lesson->course_order = $_lesson_orders[$lesson->ID];
+                }else{
+                    $lesson->course_order = 100000;
+                }
                 // for lessons with no order set it to be 10000 so that it show up at the end
-                $lesson->course_order = $order ? $order : 100000;
+
             }
 
             uasort( $lessons, array( $this, '_short_course_lessons_callback' )   );
