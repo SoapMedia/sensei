@@ -964,7 +964,7 @@ class Sensei_Course {
             $course_id = $course_id->ID;
         }
         $post_ids = array();
-        if(!is_array($lesson_post_ids_cache) || count($lesson_post_ids_cache) <= 0){
+        if(!is_array($lesson_post_ids_cache) || count($lesson_post_ids_cache) <= 0 || !array_key_exists(intval( $course_id ),$lesson_post_ids_cache)){
             global $wpdb;
             $post_obj = $wpdb->get_results( 'SELECT post_id FROM wp_postmeta WHERE meta_key = \'_lesson_course\' AND meta_value = ' . intval( $course_id ) . ';', OBJECT );
             foreach($post_obj as $post_obj_ent){
@@ -972,6 +972,9 @@ class Sensei_Course {
             }
         }else{
             $post_ids = $lesson_post_ids_cache[intval( $course_id )];
+        }
+        if(!is_array($post_ids) || count($post_ids) == 0){
+            return array();
         }
         $post_args = array(	'post_type'         => 'lesson',
             'posts_per_page'       => -1,
@@ -989,6 +992,10 @@ class Sensei_Course {
         // be done via the AND meta query as it excludes lesson that does not have the _order_$course_id but
         // that have been added to the course.
         global $wpdb;
+
+        if(count($post_ids)<1){
+            return array();
+        }
         $lesson_query = 'SELECT post_id, meta_value FROM wp_postmeta WHERE post_id IN (' . implode(',',$post_ids) .') AND meta_key REGEXP \'(_order_)([0-9]+)\';';
         $_lesson_sorting = $wpdb->get_results( $lesson_query, OBJECT );
         $_lesson_orders = array();
