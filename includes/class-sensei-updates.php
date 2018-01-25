@@ -116,7 +116,7 @@ class Sensei_Updates
         <div class="wrap">
 
         <div id="icon-woothemes-sensei" class="icon32"><br></div>
-        <h2><?php _e('Sensei Updates', 'woothemes-sensei'); ?></h2>
+        <h1><?php _e('Sensei Updates', 'woothemes-sensei'); ?></h1>
 
         <?php
         $function_name= '';
@@ -134,7 +134,7 @@ class Sensei_Updates
 
                 foreach ($_POST['checked'] as $key => $function_name) {
 
-                    if( ! isset(  $_POST[ $function_name.'_nonce_field' ] ) 
+                    if( ! isset(  $_POST[ $function_name.'_nonce_field' ] )
                         || ! wp_verify_nonce( $_POST[ $function_name.'_nonce_field' ] , 'run_'.$function_name ) ){
 
                         wp_die(
@@ -150,9 +150,9 @@ class Sensei_Updates
 
                         $done_processing = call_user_func_array(array($this, $function_name), array(50, $n));
 
-                    } elseif ($this->function_in_whitelist($function_name)) {
+                    } elseif ( $this->function_in_whitelist( $function_name ) && function_exists( $function_name ) ) {
 
-                        $done_processing = call_user_func_array($function_name, array(50, $n));
+                        $done_processing = call_user_func_array( $function_name, array( 50, $n ) );
 
                     } else {
 
@@ -270,7 +270,7 @@ class Sensei_Updates
 
         } else { ?>
 
-            <h3><?php _e('Updates', 'woothemes-sensei'); ?></h3>
+            <h2><?php _e('Updates', 'woothemes-sensei'); ?></h2>
             <p><?php printf(__('These are updates that have been made available as new Sensei versions have been released. Updates of type %1$sAuto%2$s will run as you update Sensei to the relevant version - other updates need to be run manually and you can do that here.', 'woothemes-sensei'), '<code>', '</code>'); ?></p>
 
             <div class="updated"><p>
@@ -373,19 +373,28 @@ class Sensei_Updates
      * updater context.
      *
      * @param string $function_name
+     * @return bool
      */
-    public function function_in_whitelist( $function_name ){
+    public function function_in_whitelist( $function_name ) {
 
-        $function_whitelist = array(
+        /**
+         * Filters the function whitelist for Sensei_Updates::function_in_whitelist.
+         * Allows extensions to add/remove whitelisted functions.
+         *
+         * @since 1.9.??
+         *
+         * @param array $function_whitelist
+         * @return array
+         */
+        $function_whitelist = (array)apply_filters( 'sensei_updates_function_whitelist', array(
             'status_changes_convert_questions',
             'status_changes_fix_lessons',
             'status_changes_convert_courses',
             'status_changes_convert_lessons',
             'status_changes_repair_course_statuses',
+        ) );
 
-        );
-
-        return in_array($function_name, $function_whitelist );
+        return in_array( $function_name, $function_whitelist );
 
     }// end function_in_whitelist
 

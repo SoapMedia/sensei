@@ -431,7 +431,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
             // compress the answer for saving
 			if( 'multi-line' == $question_type ) {
-                $answer = esc_html( $answer );
+                $answer = wp_kses( $answer, wp_kses_allowed_html( 'post' ) );
             }elseif( 'file-upload' == $question_type  ){
                 $file_key = 'file_upload_' . $question_id;
                 if( isset( $files[ $file_key ] ) ) {
@@ -511,7 +511,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 		    Sensei()->notices->add_notice( __( 'Quiz Reset Successfully.', 'woothemes-sensei' ) , 'info');
 	    }
 
-        return ( $deleted_answers && $deleted_grades ) ;
+		return true;
 
     } // end reset_user_lesson_data
 
@@ -1175,7 +1175,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
          $lesson_id = $this->get_lesson_id($post->ID);
 
-         $has_questions = get_post_meta( $lesson_id, '_quiz_has_questions', true );
+         $has_questions = Sensei_Lesson::lesson_quiz_has_questions( $lesson_id );
 
          $lesson = get_post($lesson_id);
 
@@ -1233,7 +1233,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
              }
 
-             $title = $title_with_no_quizzes .  ' ' . __( 'Quiz', 'woothemes-sensei' );
+             $title = sprintf( __( '%s Quiz', 'woothemes-sensei' ), $title_with_no_quizzes );
          }
 
          /**

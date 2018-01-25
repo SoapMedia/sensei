@@ -30,8 +30,9 @@ class Sensei_Messages {
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_box' ), 10, 2 );
 		add_action( 'admin_menu', array( $this, 'remove_meta_box' ) );
 
-		// Save new private message
-		add_action( 'init', array( $this, 'save_new_message' ), 1 );
+		// Save new private message (priority low to ensure sensei_message post type is
+		// registered
+		add_action( 'init', array( $this, 'save_new_message' ), 101 );
 
 		// Monitor when new reply is posted
 		add_action( 'comment_post', array( $this, 'message_reply_received' ), 10, 1 );
@@ -59,7 +60,51 @@ class Sensei_Messages {
         add_filter( 'comments_array', array( $this, 'message_replies' ), 100, 1 );
         add_filter( 'get_comments_number', array( $this, 'message_reply_count' ), 100, 2 );
         add_filter( 'comments_open', array( $this, 'message_replies_open' ), 100, 2 );
+		add_action( 'pre_get_posts', array( $this, 'only_show_messages_to_owner' ) );
 	} // End __construct()
+
+	public function only_show_messages_to_owner( $query ) {
+		if ( is_admin() ) {
+			return;
+		}
+
+		if ( ! $query->is_main_query() ) {
+			return;
+		}
+
+		if ( $this->post_type !== $query->get( 'post_type' ) ) {
+			return;
+		}
+
+		if ( current_user_can( 'manage_sensei_grades' ) ) {
+			return;
+		}
+
+		if ( ! is_user_logged_in() ) {
+			// Handled further down the hook chain.
+			return;
+		}
+
+		$username = wp_get_current_user()->user_login;
+
+		$meta_query = array(
+			'relation' => 'OR',
+		);
+
+		$meta_query[] = array(
+			'key' => '_sender',
+			'value' => $username,
+			'compare' => '='
+		);
+
+		$meta_query[] = array(
+			'key' => '_receiver',
+			'value' => $username,
+			'compare' => '='
+		);
+
+		$query->set( 'meta_query', $meta_query );
+	}
 
 	public function add_menu_item() {
 
@@ -156,7 +201,19 @@ class Sensei_Messages {
 
 		}
 
-		echo $html;
+        /**
+         * Filter the send message link
+         *
+         * @since 1.9.18
+         *
+         * @param string  	$html
+         * @param array 	$this->message_notice
+         * @param int       $post_id
+         * @param int       $user_id
+         *
+         * @return string
+         */
+        echo apply_filters( 'sensei_messages_send_message_link', $html, isset( $this->message_notice ) ? $this->message_notice : '', $post_id, $user_id );
 	}
 
 	public function teacher_contact_form( $post ) {
@@ -412,7 +469,7 @@ class Sensei_Messages {
 
 		if( is_admin() ) return;
 
-		if( is_post_type_archive( $this->post_type ) && $query->is_main_query() ) {
+		if( $query->is_main_query() && is_post_type_archive( $this->post_type ) ) {
 			wp_get_current_user();
 			$username = $current_user->user_login;
 

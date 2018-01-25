@@ -47,7 +47,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
             <p class="message-excerpt">
 
-                <?php the_excerpt();?>
+                <?php echo get_the_excerpt(); ?>
 
             </p>
 
@@ -77,4 +77,4 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
     </section> <!-- article .message-content -->
 
-</article> <!-- article .(<?php echo sc_attr( join( ' ', get_post_class( array( 'sensei_message', 'post' ) ) ) ); ?>  -->
+</article> <!-- article .(<?php echo esc_attr( join( ' ', get_post_class( array( 'sensei_message', 'post' ) ) ) ); ?>  -->

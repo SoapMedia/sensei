@@ -33,7 +33,7 @@ class Sensei_Utils {
 	 * @return bool
 	 */
 	public static function sensei_is_woocommerce_present () {
-
+		_deprecated_function(__FUNCTION__, Sensei()->version, 'Sensei_WC::is_woocommerce_present');
         return Sensei_WC::is_woocommerce_present();
 
 	} // End sensei_is_woocommerce_present()
@@ -568,7 +568,7 @@ class Sensei_Utils {
 	/**
 	 * Grade question automatically
      *
-     * This function checks the question typ and then grades it accordingly.
+     * This function checks the question type and then grades it accordingly.
      *
      * @deprecated since 1.7.4 use WooThemes_Sensei_Grading::grade_question_auto instead
      *
@@ -685,7 +685,7 @@ class Sensei_Utils {
 
 			if( $complete ) {
 
-				$has_questions = get_post_meta( $lesson_id, '_quiz_has_questions', true );
+				$has_questions = Sensei_Lesson::lesson_quiz_has_questions( $lesson_id );
 				if ( $has_questions ) {
 					$status = 'passed'; // Force a pass
 					$metadata['grade'] = 0;
@@ -1021,6 +1021,24 @@ class Sensei_Utils {
 	} // End lesson_quiz_questions()
 
 	/**
+	 * Complete this course forcefully for this user by passing all the lessons.
+	 *
+	 * @param int $user_id User ID.
+	 * @param int $course_id Course ID
+	 */
+	public static function force_complete_user_course( $user_id, $course_id ) {
+		$user = get_user_by( 'id', $user_id );
+		if ( false === $user ) {
+			return;
+		}
+		$lesson_ids = Sensei()->course->course_lessons( $course_id, 'any', 'ids' );
+
+		foreach( $lesson_ids as $id ) {
+			Sensei_Utils::sensei_start_lesson( $id, $user_id, true );
+		}
+	}
+
+	/**
 	 * Get pass mark for course
 	 * @param  integer $course_id ID of course
 	 * @return integer            Pass mark for course
@@ -1113,10 +1131,10 @@ class Sensei_Utils {
             $total_grade = 0;
             foreach( $lessons as $lesson ) {
 
-                // Check for lesson having questions, thus a quiz, thus having a grade
-                $has_questions = get_post_meta( $lesson->ID, '_quiz_has_questions', true );
-                if ( $has_questions ) {
-                    $user_lesson_status = Sensei_Utils::user_lesson_status( $lesson->ID, $user_id );
+				// Check for lesson having questions, thus a quiz, thus having a grade
+				$has_questions = Sensei_Lesson::lesson_quiz_has_questions( $lesson->ID );
+				if ( $has_questions ) {
+					$user_lesson_status = Sensei_Utils::user_lesson_status( $lesson->ID, $user_id );
 
                     if(  empty( $user_lesson_status ) ){
                         continue;
@@ -1280,7 +1298,7 @@ class Sensei_Utils {
 			$pass_required = get_post_meta( $quiz_id, '_pass_required', true );
 
 			// Quiz questions
-			$has_quiz_questions = get_post_meta( $lesson_id, '_quiz_has_questions', true );
+			$has_quiz_questions = Sensei_Lesson::lesson_quiz_has_questions( $lesson_id );
 
 			if ( ! $started_course ) {
 
@@ -1484,7 +1502,7 @@ class Sensei_Utils {
 	 * @param  integer $user_id   User ID
 	 * @return mixed boolean or comment_ID
 	 */
-	public static function user_complete_course( $course_id = 0, $user_id = 0 ) {
+	public static function user_complete_course( $course_id = 0, $user_id = 0, $trigger_completion_action = true ) {
 		global  $wp_version;
 
 		if( $course_id ) {
@@ -1542,29 +1560,18 @@ class Sensei_Utils {
 			foreach( $all_lesson_statuses as $lesson_status ) {
 				// If lessons are complete without needing quizzes to be passed
 				if ( 'passed' != $course_completion ) {
-					switch ( $lesson_status->comment_approved ) {
-						// A user cannot 'complete' a course if a lesson...
-						case 'in-progress': // ...is still in progress
-						case 'ungraded': // ...hasn't yet been graded
-							break;
-
-						default:
-							$lessons_completed++;
-							break;
+					// A user cannot 'complete' a course if a lesson...
+					// ...is still in progress
+					// ...hasn't yet been graded
+					$lesson_not_complete_stati = array( 'in-progress', 'ungraded' );
+					if ( ! in_array( $lesson_status->comment_approved, $lesson_not_complete_stati, true ) ) {
+						$lessons_completed++;
 					}
 				}
 				else {
-					switch ( $lesson_status->comment_approved ) {
-						case 'complete': // Lesson has no quiz/questions
-						case 'graded': // Lesson has quiz, but it's not important what the grade was
-						case 'passed': // Lesson has quiz and the user passed
-							$lessons_completed++;
-							break;
-
-						// A user cannot 'complete' a course if on a lesson...
-						case 'failed': // ...a user failed the passmark on a quiz
-						default:
-							break;
+					$lesson_complete_stati = array( 'complete', 'graded', 'passed' );
+					if ( in_array( $lesson_status->comment_approved, $lesson_complete_stati, true ) ) {
+						$lessons_completed++;
 					}
 				}
 			} // Each lesson
@@ -1580,7 +1587,7 @@ class Sensei_Utils {
 			$activity_logged = Sensei_Utils::update_course_status( $user_id, $course_id, $course_status, $course_metadata );
 
 			// Allow further actions
-			if ( 'complete' == $course_status ) {
+			if ( 'complete' == $course_status && true === $trigger_completion_action ) {
 				do_action( 'sensei_user_course_end', $user_id, $course_id );
 			}
 			return $activity_logged;
@@ -2440,6 +2447,45 @@ EOF;
 			return $activity_logged;
 		}
 		return $activity_logged;
+	}
+
+	public static function is_plugin_present_and_activated($plugin_class_to_look_for, $plugin_registered_path) {
+		$active_plugins = (array) get_option( 'active_plugins', array() );
+
+		if ( is_multisite() ){
+
+			$active_plugins = array_merge( $active_plugins, get_site_option( 'active_sitewide_plugins', array() ) );
+
+		}
+
+		$plugin_present_and_activated = in_array( $plugin_registered_path, $active_plugins ) || array_key_exists( $plugin_registered_path, $active_plugins );
+		return class_exists( $plugin_class_to_look_for ) || $plugin_present_and_activated;
+	}
+
+	/**
+	 * Hard - Resets a Learner's Course Progress
+	 * @param $course_id int
+	 * @param $user_id int
+	 * @return mixed
+	 */
+	public static function reset_course_for_user( $course_id, $user_id ) {
+		self::sensei_remove_user_from_course( $course_id, $user_id );
+		return self::user_start_course( $user_id, $course_id );
+	}
+
+	/**
+	 * @param $setting_name string
+	 * @param null|string $filter_to_apply
+	 * @return bool
+	 */
+	public static function get_setting_as_flag($setting_name, $filter_to_apply = null ) {
+		$setting_on = false;
+
+		if ( isset( Sensei()->settings->settings[ $setting_name ] ) ) {
+			$setting_on = (bool)Sensei()->settings->settings[ $setting_name ];
+		}
+
+		return ( null !== $filter_to_apply ) ? (bool)apply_filters($filter_to_apply, $setting_on) : $setting_on;
 	}
 } // End Class
 

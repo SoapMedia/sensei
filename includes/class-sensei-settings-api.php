@@ -115,12 +115,16 @@ class Sensei_Settings_API {
 
 			$html .= '<ul id="settings-sections" class="subsubsub hide-if-no-js">' . "\n";
 
-			$sections = array(
-						'all' => array( 'href' => '#all', 'name' => __( 'All', 'woothemes-sensei' ), 'class' => 'current all tab' )
-					);
+			$sections = array();
 
 			foreach ( $this->tabs as $k => $v ) {
-				$sections[$k] = array( 'href' => '#' . esc_attr( $k ), 'name' => esc_attr( $v['name'] ), 'class' => 'tab' );
+				$classes = 'tab';
+
+				if ( 'default-settings' === $k ) {
+					$classes .= ' current';
+				}
+
+				$sections[$k] = array( 'href' => '#' . esc_attr( $k ), 'name' => esc_attr( $v['name'] ), 'class' => esc_attr( $classes ) );
 			}
 
 			$count = 1;
@@ -296,12 +300,11 @@ class Sensei_Settings_API {
 
         ?>
         <div id="woothemes-sensei" class="wrap <?php echo esc_attr($this->token); ?>">
-        <?php screen_icon('woothemes-sensei'); ?>
-        <h2><?php echo esc_html($this->name); ?><?php if ('' != $this->settings_version) {
+        <h1><?php echo esc_html($this->name); ?><?php if ('' != $this->settings_version) {
                 echo ' <span class="version">' . $this->settings_version . '</span>';
-            } ?></h2>
-        <p class="powered-by-woo"><?php _e('Powered by', 'woothemes-sensei'); ?><a href="http://www.woothemes.com/"
-                                                                                   title="WooThemes"><img
+            } ?></h1>
+        <p class="powered-by-woo"><?php _e('Powered by', 'woothemes-sensei'); ?><a href="https://woocommerce.com/"
+                                                                                   title="WooCommerce"><img
                     src="<?php echo Sensei()->plugin_url; ?>assets/images/woothemes.png" alt="WooThemes"/></a></p>
         <?php do_action('settings_before_form'); ?>
         <form action="options.php" method="post">
@@ -441,7 +444,8 @@ class Sensei_Settings_API {
 		if ( $has_description ) {
 			echo wp_kses( $args['data']['description'], array( 'a' => array(
 																	        'href' => array(),
-																	        'title' => array()
+																	        'title' => array(),
+																			'target' => array(),
 																	    )
 															)
 						) . '</label>' . "\n";

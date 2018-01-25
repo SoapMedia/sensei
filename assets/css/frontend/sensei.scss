@@ -303,12 +303,8 @@ a.sensei-certificate-link {
           }
         }
         .answer_message {
-          position: absolute;
-          right: 0;
-          top: 50%;
-          width: 50%;
-          z-index: 2;
-          text-align: right;
+          position: relative;
+          width: 100%;
           span {
             text-align: right;
           }
@@ -334,17 +330,6 @@ a.sensei-certificate-link {
             padding: 10px;
             font-size: 85%;
             text-align: left;
-          }
-        }
-        &.essay-paste, &.gap-fill, &.multi-line, &.single-line {
-          .answer_message {
-            position: relative;
-            width: 100%;
-            margin: 10px 0;
-            text-align: right;
-            .notes {
-              width: 50%;
-            }
           }
         }
       }
@@ -849,7 +834,12 @@ section.entry span.course-price { padding-left: 10px; }
     -moz-box-shadow: none;
     box-shadow: none;
 
-    &:hover { text-decoration: none; background: darken($color_links, 5%); }
+    &:hover {
+      text-decoration: none;
+      color: #fff;
+      background: darken($color_links, 5%);
+    }
+
     &:active {
       border-color: $color_links - #555;
       -webkit-box-shadow: inset 0 0 7px hsla(0,0%,0%,.3),

@@ -59,8 +59,12 @@ class Sensei_Learner_Profiles {
 	 */
 	public function page_title( $title, $sep = null ) {
 		global $wp_query;
-		if( isset( $wp_query->query_vars['learner_profile'] ) ) {
-			$learner_user = get_user_by( 'login', $wp_query->query_vars['learner_profile'] );
+		if ( isset( $wp_query->query_vars['learner_profile'] ) ) {
+		    $query_var = $wp_query->query_vars['learner_profile'];
+		    $learner_user = Sensei_Learner::find_by_query_var( $query_var );
+		    if ( false === $learner_user ) {
+		        return $title;
+		    }
 
             $name = Sensei_Learner::get_full_name( $learner_user->ID );
 
@@ -94,8 +98,12 @@ class Sensei_Learner_Profiles {
 				$permalink = trailingslashit( get_home_url() ) . '?learner_profile=' . $user->user_nicename;
 			}
 		}
-
-		return $permalink;
+		
+        /**
+         * This allows filtering of the Learner Profile permalinks.
+         * @since 1.9.13
+         */
+		return apply_filters( 'sensei_learner_profile_permalink', $permalink, $user );
 	}
 
 	/**

@@ -53,9 +53,8 @@ class Sensei_Admin {
 
 		// Add notices to WP dashboard
 		add_action( 'admin_notices', array( $this, 'theme_compatibility_notices' ) );
-
-		// Reset theme notices when switching themes
-		add_action( 'switch_theme', array( $this, 'reset_theme_check_notices' ) );
+		// warn users in case admin_email is not a real WP_User
+		add_action( 'admin_notices', array( $this, 'notify_if_admin_email_not_real_admin_user' ) );
 
 		// Allow Teacher access the admin area
 		add_filter( 'woocommerce_prevent_admin_access', array( $this, 'admin_access' ) );
@@ -265,9 +264,10 @@ class Sensei_Admin {
 		// Global Styles for icons and menu items
 		wp_register_style( 'woothemes-sensei-global', Sensei()->plugin_url . 'assets/css/global.css', '', Sensei()->version, 'screen' );
 		wp_enqueue_style( 'woothemes-sensei-global' );
+		$select_two_location = '/assets/vendor/select2-4.0.3/dist/css/select2.css';
 
         // Select 2 styles
-        wp_enqueue_style( 'sensei-core-select2', Sensei()->plugin_url . 'assets/css/select2/select2.css', '', Sensei()->version, 'screen' );
+        wp_enqueue_style( 'sensei-core-select2', Sensei()->plugin_url . $select_two_location, '', Sensei()->version, 'screen' );
 
 		// Test for Write Panel Pages
 		if ( ( ( isset( $post_type ) && in_array( $post_type, $allowed_post_types ) ) && ( isset( $hook ) && in_array( $hook, $allowed_post_type_pages ) ) ) || ( isset( $_GET['page'] ) && in_array( $_GET['page'], $allowed_pages ) ) ) {
@@ -294,9 +294,10 @@ class Sensei_Admin {
 
         // Allow developers to load non-minified versions of scripts
         $suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
+		$select_two_location = '/assets/vendor/select2-4.0.3/dist/js/select2.full';
 
         // Select2 script used to enhance all select boxes
-        wp_register_script( 'sensei-core-select2', Sensei()->plugin_url . '/assets/js/select2/select2' . $suffix . '.js', array( 'jquery' ), Sensei()->version );
+        wp_register_script( 'sensei-core-select2', Sensei()->plugin_url . $select_two_location . $suffix . '.js', array( 'jquery' ), Sensei()->version );
 
         // load edit module scripts
         if( 'edit-module' ==  $screen->id ){
@@ -305,6 +306,8 @@ class Sensei_Admin {
 
         }
 
+
+		wp_enqueue_script( 'sensei-message-menu-fix', Sensei()->plugin_url . 'assets/js/admin/message-menu-fix.js', array( 'jquery' ), Sensei()->version, true );
     }
 
 
@@ -1049,7 +1052,7 @@ class Sensei_Admin {
 		wp_enqueue_script( 'woothemes-sensei-settings', esc_url( Sensei()->plugin_url . 'assets/js/settings' . $suffix . '.js' ), array( 'jquery', 'jquery-ui-sortable' ), Sensei()->version );
 
 		?><div id="course-order" class="wrap course-order">
-		<h2><?php esc_html_e( 'Order Courses', 'woothemes-sensei' ); ?></h2><?php
+		<h1><?php esc_html_e( 'Order Courses', 'woothemes-sensei' ); ?></h1><?php
 
 		$html = '';
 
@@ -1161,7 +1164,7 @@ class Sensei_Admin {
 		wp_enqueue_script( 'woothemes-sensei-settings', esc_url( Sensei()->plugin_url . 'assets/js/settings' . $suffix . '.js' ), array( 'jquery', 'jquery-ui-sortable' ), Sensei()->version );
 
 		?><div id="lesson-order" class="wrap lesson-order">
-		<h2><?php _e( 'Order Lessons', 'woothemes-sensei' ); ?></h2><?php
+		<h1><?php _e( 'Order Lessons', 'woothemes-sensei' ); ?></h1><?php
 
 		$html = '';
 
@@ -1456,76 +1459,8 @@ class Sensei_Admin {
         if( isset( $_GET['sensei_hide_notice'] ) ) {
         	switch( esc_attr( $_GET['sensei_hide_notice'] ) ) {
 				case 'menu_settings': add_user_meta( get_current_user_id(), 'sensei_hide_menu_settings_notice', true ); break;
-				case 'theme_check': add_user_meta( get_current_user_id(), 'sensei_hide_theme_check_notice', true ); break;
 			}
         }
-
-        // white list templates that are already support by default and do not show notice for them
-        $template = get_option( 'template' );
-
-        $white_list = array(    'twentyeleven',
-                                'twentytwelve',
-                                'twentyfourteen',
-                                'twentyfifteen',
-                                'twentysixteen',
-                                'storefront',
-                                                );
-
-        if ( in_array( $template, $white_list ) ) {
-
-            return;
-
-        }
-
-        // don't show the notice if the user chose to hide it
-        $hide_theme_check_notice = get_user_meta( get_current_user_id(), 'sensei_hide_theme_check_notice', true );
-        if(  $hide_theme_check_notice ) {
-
-            return;
-
-        }
-
-        // show the notice for themes not supporting sensei
-	    if ( ! current_theme_supports( 'sensei' ) ) {
-            ?>
-
-            <div id="message" class="error sensei-message sensei-connect">
-                    <p>
-                        <strong>
-
-                            <?php esc_html_e( 'Your theme does not declare Sensei support', 'woothemes-sensei' ); ?>
-
-                        </strong> &#8211;
-
-                        <?php esc_html_e( 'if you encounter layout issues please read our integration guide or choose a ', 'woothemes-sensei' ); ?>
-
-                        <a href="http://www.woothemes.com/product-category/themes/sensei-themes/"> <?php esc_html_e( 'Sensei theme', 'woothemes-sensei' ) ?> </a>
-
-                        :)
-
-                    </p>
-                    <p class="submit">
-                        <a href="<?php echo esc_url( apply_filters( 'sensei_docs_url', 'http://docs.woothemes.com/document/sensei-and-theme-compatibility/', 'theme-compatibility' ) ); ?>" class="button-primary">
-
-                            <?php esc_html_e( 'Theme Integration Guide', 'woothemes-sensei' ); ?></a> <a class="skip button" href="<?php echo esc_url( add_query_arg( 'sensei_hide_notice', 'theme_check' ) ); ?>"><?php esc_html_e( 'Hide this notice', 'woothemes-sensei' ); ?>
-
-                        </a>
-                    </p>
-            </div>
-            <?php
-		}
-	}
-
-	/**
-	 * Reset theme check notice
-	 * @return void
-	 */
-	public function reset_theme_check_notices() {
-		global $current_user;
-		wp_get_current_user();
-        $user_id = $current_user->ID;
-
-		delete_user_meta( $user_id, 'sensei_hide_theme_check_notice' );
 	}
 
 	/**
@@ -1629,6 +1564,24 @@ class Sensei_Admin {
 					$this->save_course_order( implode( ',', $ordered_course_ids ) );
 				}
 			}
+		}
+	}
+
+	public function notify_if_admin_email_not_real_admin_user() {
+		$maybe_admin = get_user_by( 'email', get_bloginfo( 'admin_email' ) );
+
+		if ( false === $maybe_admin || false === user_can( $maybe_admin, 'manage_options' ) ) {
+			$general_settings_url = '<a href="' . esc_attr( esc_url( admin_url( 'options-general.php' ) ) ) . '">' . __( 'Settings > General', 'woothemes-sensei' ) . '</a>';
+			$add_new_user_url = '<a href="' . esc_attr( esc_url( admin_url( 'user-new.php' ) ) ) . '">' . __( 'add a new Administrator', 'woothemes-sensei' ) . '</a>';
+			$existing_administrators_link = '<a href="' . esc_attr( esc_url( admin_url( 'users.php?role=administrator' ) ) ) . '">' . __( 'existing Administrator', 'woothemes-sensei' ) . '</a>';
+			$current_setting = esc_html__( get_bloginfo( 'admin_email' ) );
+			?><div id="message" class="error sensei-message sensei-connect">
+				<p>
+					<strong>
+						<?php printf( esc_html__( 'To prevent issues with Sensei module names, your Email Address in %s should also belong to an Administrator user. You can either %s with the email address %s, or change that email address to match the email of an %s.', 'woothemes-sensei' ), $general_settings_url, $add_new_user_url, $current_setting, $existing_administrators_link ); ?>
+					</strong>
+				</p>
+			</div><?php
 		}
 	}
 

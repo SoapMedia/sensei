@@ -309,12 +309,8 @@ a.sensei-certificate-link {
         .quiz form ol#sensei-quiz-list li ul li label {
           vertical-align: middle; }
     .quiz form ol#sensei-quiz-list li .answer_message {
-      position: absolute;
-      right: 0;
-      top: 50%;
-      width: 50%;
-      z-index: 2;
-      text-align: right; }
+      position: relative;
+      width: 100%; }
       .quiz form ol#sensei-quiz-list li .answer_message span {
         text-align: right; }
       .quiz form ol#sensei-quiz-list li .answer_message.user_right {
@@ -341,13 +337,6 @@ a.sensei-certificate-link {
         padding: 10px;
         font-size: 85%;
         text-align: left; }
-    .quiz form ol#sensei-quiz-list li.essay-paste .answer_message, .quiz form ol#sensei-quiz-list li.gap-fill .answer_message, .quiz form ol#sensei-quiz-list li.multi-line .answer_message, .quiz form ol#sensei-quiz-list li.single-line .answer_message {
-      position: relative;
-      width: 100%;
-      margin: 10px 0;
-      text-align: right; }
-      .quiz form ol#sensei-quiz-list li.essay-paste .answer_message .notes, .quiz form ol#sensei-quiz-list li.gap-fill .answer_message .notes, .quiz form ol#sensei-quiz-list li.multi-line .answer_message .notes, .quiz form ol#sensei-quiz-list li.single-line .answer_message .notes {
-        width: 50%; }
 
 .quiz form input.quiz-submit {
   margin-right: 10px; }
@@ -817,6 +806,7 @@ section.entry span.course-price {
   .quiz input.button:hover,
   .quiz button.button:hover {
     text-decoration: none;
+    color: #fff;
     background: #3b9de5; }
   .course-container a.button:active, .course-container a.button:visited:active,
   .course-container a.comment-reply-link:active,
@@ -1064,18 +1054,18 @@ section.entry span.course-price {
 /**
 Module archive
 */
-#main .lesson-content .lesson-meta {
+body.tax-module #main .lesson-content .lesson-meta {
   margin: 0px 0px 1.618em; }
-  #main .lesson-content .lesson-meta span {
+  body.tax-module #main .lesson-content .lesson-meta span {
     font-style: italic;
     font-size: 0.9em;
     color: #888888;
     padding-right: 1em; }
-  #main .lesson-content .lesson-meta .lesson-status.complete {
+  body.tax-module #main .lesson-content .lesson-meta .lesson-status.complete {
     color: #63a95f; }
-  #main .lesson-content .lesson-meta .lesson-status.in-progress {
+  body.tax-module #main .lesson-content .lesson-meta .lesson-status.in-progress {
     color: #646464; }
-  #main .lesson-content .lesson-meta .lesson-status::before {
+  body.tax-module #main .lesson-content .lesson-meta .lesson-status::before {
     font-family: FontAwesomeSensei;
     display: inline-block;
     font-size: 100%;
@@ -1083,9 +1073,9 @@ Module archive
     font-weight: normal;
     line-height: 1em;
     width: 1em; }
-  #main .lesson-content .lesson-meta .lesson-status.complete::before {
+  body.tax-module #main .lesson-content .lesson-meta .lesson-status.complete::before {
     content: '\f00c'; }
-  #main .lesson-content .lesson-meta .lesson-status.in-progress::before {
+  body.tax-module #main .lesson-content .lesson-meta .lesson-status.in-progress::before {
     content: '\f0ca'; }
 
 /**

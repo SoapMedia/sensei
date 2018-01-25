@@ -257,6 +257,7 @@ class Sensei_Learners_Main extends WooThemes_Sensei_List_Table {
 
                 $title = Sensei_Learner::get_full_name( $user_activity->user_id );
 				$a_title = sprintf( __( 'Edit &#8220;%s&#8221;' ), $title );
+				$edit_start_date_form = $this->get_edit_start_date_form( $user_activity, $post_id, $post_type, $object_type );
 
                 /**
                  * sensei_learners_main_column_data filter
@@ -275,7 +276,9 @@ class Sensei_Learners_Main extends WooThemes_Sensei_List_Table {
 						'title' => '<strong><a class="row-title" href="' . admin_url( 'user-edit.php?user_id=' . $user_activity->user_id ) . '" title="' . esc_attr( $a_title ) . '">' . $title . '</a></strong>',
 						'date_started' => get_comment_meta( $user_activity->comment_ID, 'start', true),
 						'user_status' => $status_html,
-						'actions' => '<a class="remove-learner button" data-user_id="' . $user_activity->user_id . '" data-post_id="' . $post_id . '" data-post_type="' . $post_type . '">' . sprintf( __( 'Remove from %1$s', 'woothemes-sensei' ), $object_type ) . '</a>',
+						'actions' => '<a class="remove-learner button" data-user_id="' . $user_activity->user_id . '" data-post_id="' . $post_id . '" data-post_type="' . $post_type . '">' . sprintf( __( 'Remove from %1$s', 'woothemes-sensei' ), $object_type ) . '</a>'
+							. '<a class="reset-learner button" data-user_id="' . $user_activity->user_id . '" data-post_id="' . $post_id . '" data-post_type="' . $post_type . '">' . sprintf( __( 'Reset progress', 'woothemes-sensei' ), $object_type ) . '</a>'
+					. $edit_start_date_form,
 					), $item, $post_id, $post_type );
 
 				break;
@@ -286,7 +289,7 @@ class Sensei_Learners_Main extends WooThemes_Sensei_List_Table {
 				$a_title = sprintf( __( 'Edit &#8220;%s&#8221;' ), $title );
 
 				$grading_action = '';
-				if ( get_post_meta( $item->ID, '_quiz_has_questions', true ) ) {
+				if ( Sensei_Lesson::lesson_quiz_has_questions( $item->ID ) ) {
 					$grading_action = ' <a class="button" href="' . esc_url( add_query_arg( array( 'page' => 'sensei_grading', 'lesson_id' => $item->ID, 'course_id' => $this->course_id ), admin_url( 'admin.php' ) ) ) . '">' . __( 'Grading', 'woothemes-sensei' ) . '</a>';
 				}
 
@@ -320,6 +323,16 @@ class Sensei_Learners_Main extends WooThemes_Sensei_List_Table {
 		} // switch
 
 		return $column_data;
+	}
+
+	private function get_edit_start_date_form( $user_activity, $post_id, $post_type, $object_type ) {
+		$comment_id = $user_activity->comment_ID;
+		$date_started = get_comment_meta( $comment_id, 'start', true);
+		$form = '<form class="edit-start-date">';
+		$form .= '<input class="edit-start-date-date-picker" type="text" value="'. $date_started . '">';
+		$form .= '<a class="edit-start-date-submit button" data-user_id="' . $user_activity->user_id . '" data-post_id="' . $post_id . '" data-post_type="' . $post_type . '" data-comment_id="' . $comment_id . '">' . sprintf( __( 'Edit Start Date', 'woothemes-sensei' ), $object_type ) . '</a>';
+		$form .= '</form>';
+		return $form;
 	}
 
 	/**
@@ -611,7 +624,9 @@ class Sensei_Learners_Main extends WooThemes_Sensei_List_Table {
 			<div class="inside">
 				<form name="add_learner" action="" method="post">
 					<p>
-						<input name="add_user_id" placeholder="<?php _e( 'Find learner', 'woothemes-sensei' ) ;?>" id="add_learner_search" style="min-width:300px;" />
+						<select name="add_user_id" id="add_learner_search" multiple="multiple" style="min-width:300px;>
+							<option value="0" selected="selected"><?php _e( 'Find learner', 'woothemes-sensei' ) ;?></option>
+						</select>
 						<?php if( 'lesson' == $form_post_type ) { ?>
 							<label for="add_complete_lesson"><input type="checkbox" id="add_complete_lesson" name="add_complete_lesson"  value="yes" /> <?php _e( 'Complete lesson for learner', 'woothemes-sensei' ); ?></label>
 						<?php } elseif( 'course' == $form_post_type ) { ?>

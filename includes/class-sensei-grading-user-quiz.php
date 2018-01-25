@@ -203,17 +203,16 @@ class Sensei_Grading_User_Quiz {
 						<p class="user-answer"><?php
 							foreach ( $user_answer_content as $_user_answer ) {
 
-                                if( 'multi-line' == Sensei()->question->get_question_type( $question->ID ) ){
-                                    $_user_answer = htmlspecialchars_decode( nl2br( $_user_answer ) );
+                                if ( 'multi-line' === Sensei()->question->get_question_type( $question->ID ) ) {
+									$is_plaintext = sanitize_text_field( $_user_answer ) == $_user_answer;
+									if ( $is_plaintext ) {
+										$_user_answer = nl2br( $_user_answer );
+                                    }
+
+									$_user_answer = htmlspecialchars_decode( $_user_answer );
                                 }
 
-								$_user_answer = wp_kses( apply_filters( 'sensei_answer_text', $_user_answer ), array(
-									'a' => array(
-										'href' => array(),
-										'title' => array(),
-										'target' => array(),
-									)
-								) );
+								$_user_answer = wp_kses( apply_filters( 'sensei_answer_text', $_user_answer ), wp_kses_allowed_html( 'post' ) );
 
 								echo $_user_answer . "<br>";
 							}
@@ -222,6 +221,10 @@ class Sensei_Grading_User_Quiz {
 							<h5><?php _e( 'Correct answer', 'woothemes-sensei' ) ?></h5>
 							<span class="correct-answer"><?php
 								foreach ( $right_answer as $_right_answer ) {
+
+									if( 'multi-line' == Sensei()->question->get_question_type( $question->ID ) ){
+										$_right_answer = htmlspecialchars_decode( nl2br( $_right_answer ) );
+									}
 
 									echo apply_filters( 'sensei_answer_text', $_right_answer ) . "<br>";
 

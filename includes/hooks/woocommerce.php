@@ -33,7 +33,7 @@ add_filter( 'sensei_can_user_view_lesson', array( 'Sensei_WC','alter_can_user_vi
 /**
  * Before my courses
  */
-add_filter( 'pre_get_posts', array( 'Sensei_WC','assign_user_to_unassigned_purchased_courses' ) );
+// add_filter( 'pre_get_posts', array( 'Sensei_WC','assign_user_to_unassigned_purchased_courses' ) );
 
 
 /******************************
@@ -80,12 +80,22 @@ add_action( 'woocommerce_email_after_order_table', array( 'Sensei_WC', 'email_co
  * Checkout
  *
  ************************************/
-add_action( 'woocommerce_delete_shop_order_transients',     array( 'Sensei_WC', 'complete_order' ) );
-add_action( 'woocommerce_delete_shop_order_transients',     array( 'Sensei_WC', 'cancel_order' ) );
+add_action( 'woocommerce_order_status_completed',     array( 'Sensei_WC', 'complete_order' ) );
+add_action( 'woocommerce_order_status_processing',     array( 'Sensei_WC', 'complete_order' ) );
+
+add_action( 'woocommerce_order_status_cancelled',     array( 'Sensei_WC', 'cancel_order' ) );
 // Disable guest checkout if a course is in the cart as we need a valid user to store data for
 add_filter( 'pre_option_woocommerce_enable_guest_checkout', array( 'Sensei_WC', 'disable_guest_checkout' ) );
 // Mark orders with virtual products as complete rather then stay processing
 add_filter( 'woocommerce_payment_complete_order_status',    array( 'Sensei_WC', 'virtual_order_payment_complete' ), 10, 2 );
+
+/************************************
+ *
+ * Add To Cart
+ *
+ ************************************/
+// fail to add to cart if user already taking course.
+add_action( 'woocommerce_add_to_cart', array( 'Sensei_WC', 'do_not_add_course_to_cart_if_user_taking_course' ), 10, 6 );
 
 /************************************
  *
