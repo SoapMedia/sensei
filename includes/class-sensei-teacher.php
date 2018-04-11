@@ -246,20 +246,16 @@ class Sensei_Teacher {
         // get the current author
         $current_author = $post->post_author;
 
-        //get the users authorised to author courses
-        $users = $this->get_teachers_and_authors();
+        $users = $this->get_teachers_and_authors_as_objects(array('id', 'display_name'));
 
-    ?>
+        ?>
         <select name="sensei-course-teacher-author" class="sensei course teacher">
 
-            <?php foreach ( $users as $user_id ) { ?>
+            <?php foreach ( $users as $user ) { ?>
 
-                    <?php
-                        $user = get_user_by('id', $user_id);
-                    ?>
-                    <option <?php selected(  $current_author , $user_id , true ); ?> value="<?php echo $user_id; ?>" >
-                        <?php echo  $user->display_name; ?>
-                    </option>
+                <option <?php selected(  $current_author , $user->id , true ); ?> value="<?php echo $user->id; ?>" >
+                    <?php echo  $user->display_name; ?>
+                </option>
 
             <?php }// end for each ?>
 
@@ -300,6 +296,36 @@ class Sensei_Teacher {
         return  array_unique( array_merge( $teachers, $authors ) );
 
     }// end get_teachers_and_authors
+
+    /**
+     * Get a list of users who can author courses, lessons and quizes.
+     * but allow quering for fields
+     *
+     * @param string|array $fields Same as \WP_User_Query's "fields" argument
+     * @return \stdClass[] A unique array of stdClass objects
+     */
+    public function get_teachers_and_authors_as_objects($fields = 'all')
+    {
+        $author_query_args = array(
+            'blog_id'      => $GLOBALS['blog_id'],
+            'fields'       => $fields,
+            'who'          => 'authors'
+        );
+
+        $authors = get_users( $author_query_args );
+
+        $teacher_query_args = array(
+            'blog_id'      => $GLOBALS['blog_id'],
+            'fields'       => $fields,
+            'role'         => 'teacher',
+        );
+
+        $teachers = get_users( $teacher_query_args );
+
+        // quick way to remove duplicate items from an array of stdClass objects
+        $temp = array_map('json_encode', array_merge( $teachers, $authors ));
+        return array_map('json_decode', array_unique($temp));
+    }
 
     /**
      * Sensei_Teacher::save_teacher_meta_box
